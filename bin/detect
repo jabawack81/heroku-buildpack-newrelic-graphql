@@ -1,0 +1,20 @@
+#!/bin/sh
+# bin/detect <BUILD_DIR>
+
+if [ "empty$NEW_RELIC_LICENSE_KEY"  == "empty" ]; then
+  echo "no NEW_RELIC_LICENSE_KEY"
+  exit 1
+fi
+
+if [ "empty$NEW_RELIC_APP_ID" == "empty" ]; then
+  echo "no NEW_RELIC_APP_ID"
+  exit 1
+fi
+
+if [ "empty$HEROKU_SLUG_COMMIT" == "empty" ]; then
+  echo "no HEROKU_SLUG_COMMIT"
+  exit 1
+fi
+
+echo "NewRelic notifiable"
+exit 0

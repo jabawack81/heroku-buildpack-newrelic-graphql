@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# bin/compile <BUILD_DIR> <CACHE_DIR> <ENV_DIR>
+
+set -eo pipefail
+
+indent() {
+  sed 's/^/       /'
+}
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+echo -e "-----> New Relic"
+
+export "NEW_RELIC_LICENSE_KEY=$(cat $ENV_DIR/NEW_RELIC_LICENSE_KEY)"
+export "NEW_RELIC_APP_ID=$(cat $ENV_DIR/NEW_RELIC_APP_ID)"
+export "HEROKU_SLUG_COMMIT=$(cat $ENV_DIR/HEROKU_SLUG_COMMIT)"
+
+echo -e "Creating deployment for application $NEW_RELIC_APP_ID\n" | indent
+
+curl --location 'https://api.newrelic.com/graphql' \
+  --header 'Api-Key: '"$NEW_RELIC_LICENSE_KEY"'' \
+  --header 'Content-Type: application/json' \
+  --header 'Accept: application/json' \
+  --data-binary @- << GRAPHQL
+  {
+    "query":"mutation (\$timestamp: EpochMilliseconds, \$version: String!) { changeTrackingCreateDeployment( deployment: { entityGuid: \"$NEW_RELIC_APP_ID\", timestamp: \$timestamp, version: \$version } ) { version } }",
+    "variables":{
+      "timestamp":$(date +%s000),
+      "version":"$HEROKU_SLUG_COMMIT"
+      }
+    }
+GRAPHQL
+
+echo -e "New Relic notified of deployment\n" | indent
